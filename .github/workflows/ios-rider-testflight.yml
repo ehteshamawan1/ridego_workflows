@@ -88,5 +88,13 @@ jobs:
         if: failure()
         shell: bash
         run: |
+          echo "Runner temp artifacts:"
           find "$RUNNER_TEMP" -type f \( -name "*.log" -o -name "*.xcresult" \) | head -100 || true
-          find ~/Library/Logs/gym -type f -maxdepth 1 -print -exec tail -200 {} \; || true
+          echo "Gym logs:"
+          find ~/Library/Logs/gym -maxdepth 1 -type f -print || true
+          if [ -f ~/Library/Logs/gym/Runner-Runner.log ]; then
+            echo "First xcodebuild errors:"
+            grep -n " error: " ~/Library/Logs/gym/Runner-Runner.log | head -50 || true
+            echo "Last 250 lines of Runner-Runner.log:"
+            tail -250 ~/Library/Logs/gym/Runner-Runner.log || true
+          fi
