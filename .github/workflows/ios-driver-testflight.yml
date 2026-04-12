@@ -74,7 +74,7 @@ jobs:
           working-directory: ${{ env.APP_PATH }}/ios
 
       - name: Configure match repo auth
-        if: ${{ secrets.MATCH_GIT_PAT != '' }}
+        if: ${{ env.MATCH_GIT_PAT != '' }}
         shell: bash
         run: |
           username="${MATCH_GIT_USERNAME:-x-access-token}"
