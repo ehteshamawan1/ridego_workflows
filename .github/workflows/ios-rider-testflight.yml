@@ -1,0 +1,92 @@
+name: Rider iOS TestFlight
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-upload:
+    runs-on: macos-15
+    env:
+      SOURCE_REPO: ehteshamawan1/ridego
+      SOURCE_REPO_PAT: ${{ secrets.SOURCE_REPO_PAT }}
+      APP_PATH: source/Files/Main-SourceCode-With-Documentation/Rider Flutter App Full SourceCode
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+      ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+      ASC_PRIVATE_KEY: ${{ secrets.ASC_PRIVATE_KEY }}
+      MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
+      MATCH_GIT_BRANCH: ${{ secrets.MATCH_GIT_BRANCH }}
+      MATCH_GIT_PAT: ${{ secrets.MATCH_GIT_PAT }}
+      MATCH_GIT_USERNAME: ${{ secrets.MATCH_GIT_USERNAME }}
+      MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+    steps:
+      - name: Checkout workflow repo
+        uses: actions/checkout@v4
+
+      - name: Checkout source repo
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.SOURCE_REPO }}
+          token: ${{ secrets.SOURCE_REPO_PAT }}
+          path: source
+
+      - name: Select Xcode 16.4
+        run: sudo xcode-select -s /Applications/Xcode_16.4.app
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Validate required secrets
+        shell: bash
+        run: |
+          required_vars=(
+            SOURCE_REPO_PAT
+            APPLE_TEAM_ID
+            ASC_KEY_ID
+            ASC_ISSUER_ID
+            ASC_PRIVATE_KEY
+            MATCH_GIT_URL
+            MATCH_PASSWORD
+          )
+          for var_name in "${required_vars[@]}"; do
+            if [[ -z "${!var_name}" ]]; then
+              echo "Missing required secret: ${var_name}"
+              exit 1
+            fi
+          done
+          echo "$ASC_PRIVATE_KEY" | base64 --decode >/dev/null
+
+      - name: Flutter pub get
+        working-directory: ${{ env.APP_PATH }}
+        run: flutter pub get
+
+      - name: Set up Ruby 3.2
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.2"
+          bundler-cache: true
+          working-directory: ${{ env.APP_PATH }}/ios
+
+      - name: Configure match repo auth
+        if: ${{ secrets.MATCH_GIT_PAT != '' }}
+        shell: bash
+        run: |
+          username="${MATCH_GIT_USERNAME:-x-access-token}"
+          git config --global url."https://${username}:${MATCH_GIT_PAT}@github.com/".insteadOf "https://github.com/"
+
+      - name: Fastlane beta
+        working-directory: ${{ env.APP_PATH }}/ios
+        run: bundle exec fastlane ios beta --verbose
+
+      - name: Dump build logs on failure
+        if: failure()
+        shell: bash
+        run: |
+          find "$RUNNER_TEMP" -type f \( -name "*.log" -o -name "*.xcresult" \) | head -100 || true
+          find ~/Library/Logs/gym -type f -maxdepth 1 -print -exec tail -200 {} \; || true
