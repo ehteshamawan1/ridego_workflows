@@ -105,21 +105,27 @@ jobs:
         if: ${{ github.event.inputs.action == 'verify' }}
         shell: bash
         working-directory: source/Files/Main-SourceCode-With-Documentation/Driver Flutter App Full SourceCode/ios
+        env:
+          SIGH_APP_IDENTIFIER: com.ridego.driver
         run: |
-          bundle exec fastlane match appstore --readonly true --app_identifier com.ridego.driver --verbose
+          bundle exec fastlane match appstore --readonly true --verbose
 
       - name: Repair Driver match assets
         if: ${{ github.event.inputs.action == 'repair_driver' || github.event.inputs.action == 'repair_both' }}
         shell: bash
         working-directory: source/Files/Main-SourceCode-With-Documentation/Driver Flutter App Full SourceCode/ios
+        env:
+          SIGH_APP_IDENTIFIER: com.ridego.driver
         run: |
-          bundle exec fastlane match nuke appstore --app_identifier com.ridego.driver --skip_confirmation true --verbose
-          bundle exec fastlane match appstore --readonly false --force --app_identifier com.ridego.driver --verbose
+          bundle exec fastlane match nuke appstore --skip_confirmation true --verbose
+          bundle exec fastlane match appstore --readonly false --force --verbose
 
       - name: Repair Rider match assets
         if: ${{ github.event.inputs.action == 'repair_rider' || github.event.inputs.action == 'repair_both' }}
         shell: bash
         working-directory: source/Files/Main-SourceCode-With-Documentation/Rider Flutter App Full SourceCode/ios
+        env:
+          SIGH_APP_IDENTIFIER: com.ridego.rider
         run: |
-          bundle exec fastlane match nuke appstore --app_identifier com.ridego.rider --skip_confirmation true --verbose
-          bundle exec fastlane match appstore --readonly false --force --app_identifier com.ridego.rider --verbose
+          bundle exec fastlane match nuke appstore --skip_confirmation true --verbose
+          bundle exec fastlane match appstore --readonly false --force --verbose
