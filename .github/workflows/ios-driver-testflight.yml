@@ -9,6 +9,7 @@ permissions:
 jobs:
   build-and-upload:
     runs-on: macos-15
+    timeout-minutes: 90
     env:
       SOURCE_REPO: ehteshamawan1/ridego
       SOURCE_REPO_PAT: ${{ secrets.SOURCE_REPO_PAT }}
@@ -42,6 +43,9 @@ jobs:
           channel: stable
           cache: true
 
+      - name: Precache Flutter iOS artifacts
+        run: flutter precache --ios
+
       - name: Validate required secrets
         shell: bash
         run: |
@@ -66,6 +70,10 @@ jobs:
         working-directory: ${{ env.APP_PATH }}
         run: flutter pub get
 
+      - name: Prepare Flutter iOS config
+        working-directory: ${{ env.APP_PATH }}
+        run: flutter build ios --release --no-codesign --config-only
+
       - name: Set up Ruby 3.2
         uses: ruby/setup-ruby@v1
         with:
@@ -81,6 +89,7 @@ jobs:
           git config --global url."https://${username}:${MATCH_GIT_PAT}@github.com/".insteadOf "https://github.com/"
 
       - name: Fastlane beta
+        timeout-minutes: 60
         working-directory: ${{ env.APP_PATH }}/ios
         run: bundle exec fastlane ios beta --verbose
 
