@@ -120,8 +120,22 @@ jobs:
           echo "Gym logs:"
           find ~/Library/Logs/gym -maxdepth 1 -type f -print || true
           if [ -f ~/Library/Logs/gym/Runner-Runner.log ]; then
-            echo "First xcodebuild errors:"
-            grep -n " error: " ~/Library/Logs/gym/Runner-Runner.log | head -50 || true
+            echo "Compiler error lines:"
+            grep -nE ':[0-9]+:[0-9]+: error:| error: ' ~/Library/Logs/gym/Runner-Runner.log | head -50 || true
+            echo "PhaseScriptExecution context:"
+            phase_line="$(grep -n 'PhaseScriptExecution Run\\ Script' ~/Library/Logs/gym/Runner-Runner.log | tail -n 1 | cut -d: -f1 || true)"
+            if [ -n "$phase_line" ]; then
+              start=$((phase_line > 80 ? phase_line - 80 : 1))
+              end=$((phase_line + 160))
+              sed -n "${start},${end}p" ~/Library/Logs/gym/Runner-Runner.log || true
+            fi
+            echo "Flutter script reference context:"
+            script_line="$(grep -n 'Script-9740EEB61CF901F6004384FC.sh' ~/Library/Logs/gym/Runner-Runner.log | tail -n 1 | cut -d: -f1 || true)"
+            if [ -n "$script_line" ]; then
+              start=$((script_line > 80 ? script_line - 80 : 1))
+              end=$((script_line + 160))
+              sed -n "${start},${end}p" ~/Library/Logs/gym/Runner-Runner.log || true
+            fi
             echo "Last 250 lines of Runner-Runner.log:"
             tail -250 ~/Library/Logs/gym/Runner-Runner.log || true
           fi
