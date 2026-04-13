@@ -137,9 +137,11 @@ jobs:
               sed -n "${start},${end}p" ~/Library/Logs/gym/Runner-Runner.log || true
             fi
             echo "Flutter generated script file:"
-            script_path="$(grep -o '/Users/runner/Library/Developer/Xcode/DerivedData/[^ ]*Script-9740EEB61CF901F6004384FC.sh' ~/Library/Logs/gym/Runner-Runner.log | tail -n 1 || true)"
+            script_path="/Users/runner/Library/Developer/Xcode/DerivedData/Runner-dgtfkjivaixgiofjmxkvddtackcf/Build/Intermediates.noindex/ArchiveIntermediates/Runner/IntermediateBuildFilesPath/Runner.build/Release-iphoneos/Runner.build/Script-9740EEB61CF901F6004384FC.sh"
             if [ -n "$script_path" ] && [ -f "$script_path" ]; then
               cat "$script_path" || true
+            else
+              find /Users/runner/Library/Developer/Xcode/DerivedData -path '*Script-9740EEB61CF901F6004384FC.sh' -print -exec cat {} \; 2>/dev/null || true
             fi
             echo "Last 250 lines of Runner-Runner.log:"
             tail -250 ~/Library/Logs/gym/Runner-Runner.log || true
