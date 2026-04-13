@@ -12,6 +12,7 @@ jobs:
     timeout-minutes: 90
     env:
       SOURCE_REPO: ehteshamawan1/ridego
+      COCOAPODS_DISABLE_STATS: "true"
       SOURCE_REPO_PAT: ${{ secrets.SOURCE_REPO_PAT }}
       APP_PATH: source/Files/Main-SourceCode-With-Documentation/Rider Flutter App Full SourceCode
       APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
@@ -69,10 +70,6 @@ jobs:
       - name: Flutter pub get
         working-directory: ${{ env.APP_PATH }}
         run: flutter pub get
-
-      - name: Prepare Flutter iOS config
-        working-directory: ${{ env.APP_PATH }}
-        run: flutter build ios --release --no-codesign --config-only
 
       - name: Set up Ruby 3.2
         uses: ruby/setup-ruby@v1
