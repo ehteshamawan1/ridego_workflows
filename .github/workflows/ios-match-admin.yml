@@ -1,0 +1,125 @@
+name: iOS Match Admin
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: Match maintenance action
+        required: true
+        type: choice
+        options:
+          - verify
+          - repair_driver
+          - repair_rider
+          - repair_both
+      confirm_reset:
+        description: Type RESET to allow repair actions
+        required: false
+        default: ""
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  match-admin:
+    runs-on: macos-15
+    timeout-minutes: 45
+    env:
+      SOURCE_REPO: ehteshamawan1/ridego
+      COCOAPODS_DISABLE_STATS: "true"
+      SOURCE_REPO_PAT: ${{ secrets.SOURCE_REPO_PAT }}
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+      ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+      ASC_PRIVATE_KEY: ${{ secrets.ASC_PRIVATE_KEY }}
+      MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
+      MATCH_GIT_BRANCH: ${{ secrets.MATCH_GIT_BRANCH }}
+      MATCH_GIT_PAT: ${{ secrets.MATCH_GIT_PAT }}
+      MATCH_GIT_USERNAME: ${{ secrets.MATCH_GIT_USERNAME }}
+      MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+    steps:
+      - name: Checkout workflow repo
+        uses: actions/checkout@v4
+
+      - name: Checkout source repo
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.SOURCE_REPO }}
+          token: ${{ secrets.SOURCE_REPO_PAT }}
+          path: source
+
+      - name: Select Xcode 16.4
+        run: sudo xcode-select -s /Applications/Xcode_16.4.app
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Validate required secrets
+        shell: bash
+        run: |
+          required_vars=(
+            SOURCE_REPO_PAT
+            APPLE_TEAM_ID
+            ASC_KEY_ID
+            ASC_ISSUER_ID
+            ASC_PRIVATE_KEY
+            MATCH_GIT_URL
+            MATCH_PASSWORD
+          )
+          for var_name in "${required_vars[@]}"; do
+            if [[ -z "${!var_name}" ]]; then
+              echo "Missing required secret: ${var_name}"
+              exit 1
+            fi
+          done
+          echo "$ASC_PRIVATE_KEY" | base64 --decode >/dev/null
+
+      - name: Set up Ruby 3.2
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.2"
+          bundler-cache: true
+          working-directory: source/Files/Main-SourceCode-With-Documentation/Driver Flutter App Full SourceCode/ios
+
+      - name: Configure match repo auth
+        if: ${{ env.MATCH_GIT_PAT != '' }}
+        shell: bash
+        run: |
+          username="${MATCH_GIT_USERNAME:-x-access-token}"
+          git config --global url."https://${username}:${MATCH_GIT_PAT}@github.com/".insteadOf "https://github.com/"
+
+      - name: Guard destructive actions
+        if: ${{ github.event.inputs.action != 'verify' }}
+        shell: bash
+        run: |
+          if [[ "${{ github.event.inputs.confirm_reset }}" != "RESET" ]]; then
+            echo "Repair actions require confirm_reset=RESET"
+            exit 1
+          fi
+
+      - name: Verify Match access
+        if: ${{ github.event.inputs.action == 'verify' }}
+        shell: bash
+        working-directory: source/Files/Main-SourceCode-With-Documentation/Driver Flutter App Full SourceCode/ios
+        run: |
+          bundle exec fastlane match appstore --readonly true --app_identifier com.ridego.driver --verbose
+
+      - name: Repair Driver match assets
+        if: ${{ github.event.inputs.action == 'repair_driver' || github.event.inputs.action == 'repair_both' }}
+        shell: bash
+        working-directory: source/Files/Main-SourceCode-With-Documentation/Driver Flutter App Full SourceCode/ios
+        run: |
+          bundle exec fastlane match nuke appstore --app_identifier com.ridego.driver --skip_confirmation true --verbose
+          bundle exec fastlane match appstore --readonly false --force --app_identifier com.ridego.driver --verbose
+
+      - name: Repair Rider match assets
+        if: ${{ github.event.inputs.action == 'repair_rider' || github.event.inputs.action == 'repair_both' }}
+        shell: bash
+        working-directory: source/Files/Main-SourceCode-With-Documentation/Rider Flutter App Full SourceCode/ios
+        run: |
+          bundle exec fastlane match nuke appstore --app_identifier com.ridego.rider --skip_confirmation true --verbose
+          bundle exec fastlane match appstore --readonly false --force --app_identifier com.ridego.rider --verbose
