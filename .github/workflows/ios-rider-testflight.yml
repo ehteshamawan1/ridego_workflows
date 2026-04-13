@@ -71,6 +71,27 @@ jobs:
         working-directory: ${{ env.APP_PATH }}
         run: flutter pub get
 
+      - name: Validate Flutter iOS generated config
+        shell: bash
+        working-directory: ${{ env.APP_PATH }}
+        run: |
+          if [ -f ios/Flutter/Generated.xcconfig ]; then
+            echo "Generated.xcconfig:"
+            cat ios/Flutter/Generated.xcconfig
+            if grep -qE '^[A-Z_]+=([A-Za-z]:\\|[A-Za-z]:/)' ios/Flutter/Generated.xcconfig; then
+              echo "Windows path detected in ios/Flutter/Generated.xcconfig"
+              exit 1
+            fi
+          fi
+          if [ -f ios/Flutter/flutter_export_environment.sh ]; then
+            echo "flutter_export_environment.sh:"
+            cat ios/Flutter/flutter_export_environment.sh
+            if grep -qE '^[^#]*[A-Za-z]:\\' ios/Flutter/flutter_export_environment.sh; then
+              echo "Windows path detected in ios/Flutter/flutter_export_environment.sh"
+              exit 1
+            fi
+          fi
+
       - name: Set up Ruby 3.2
         uses: ruby/setup-ruby@v1
         with:
