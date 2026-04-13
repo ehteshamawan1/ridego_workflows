@@ -117,7 +117,7 @@ jobs:
         env:
           SIGH_APP_IDENTIFIER: com.ridego.driver
         run: |
-          bundle exec fastlane match nuke appstore --skip_confirmation true --verbose
+          printf 'y\n' | bundle exec fastlane match nuke appstore --verbose
           bundle exec fastlane match appstore --readonly false --force --verbose
 
       - name: Repair Rider match assets
@@ -127,5 +127,5 @@ jobs:
         env:
           SIGH_APP_IDENTIFIER: com.ridego.rider
         run: |
-          bundle exec fastlane match nuke appstore --skip_confirmation true --verbose
+          printf 'y\n' | bundle exec fastlane match nuke appstore --verbose
           bundle exec fastlane match appstore --readonly false --force --verbose
