@@ -143,6 +143,13 @@ jobs:
             else
               find /Users/runner/Library/Developer/Xcode/DerivedData -path '*Script-9740EEB61CF901F6004384FC.sh' -print -exec cat {} \; 2>/dev/null || true
             fi
+            echo "Flutter tool failure context:"
+            flutter_line="$(grep -n 'package:flutter_tools/src/commands/assemble.dart:383:7' ~/Library/Logs/gym/Runner-Runner.log | tail -n 1 | cut -d: -f1 || true)"
+            if [ -n "$flutter_line" ]; then
+              start=$((flutter_line > 220 ? flutter_line - 220 : 1))
+              end=$((flutter_line + 40))
+              sed -n "${start},${end}p" ~/Library/Logs/gym/Runner-Runner.log || true
+            fi
             echo "Last 250 lines of Runner-Runner.log:"
             tail -250 ~/Library/Logs/gym/Runner-Runner.log || true
           fi
