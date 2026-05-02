@@ -106,7 +106,7 @@ jobs:
         shell: bash
         working-directory: source/Files/Main-SourceCode-With-Documentation/Driver Flutter App Full SourceCode/ios
         env:
-          SIGH_APP_IDENTIFIER: com.ridego.driver
+          SIGH_APP_IDENTIFIER: com.dashtransports.driver
         run: |
           bundle exec fastlane match appstore --readonly true --verbose
 
@@ -115,7 +115,7 @@ jobs:
         shell: bash
         working-directory: source/Files/Main-SourceCode-With-Documentation/Driver Flutter App Full SourceCode/ios
         env:
-          SIGH_APP_IDENTIFIER: com.ridego.driver
+          SIGH_APP_IDENTIFIER: com.dashtransports.driver
         run: |
           printf 'y\n' | bundle exec fastlane match nuke distribution --verbose
           bundle exec fastlane match appstore --readonly false --force --verbose
@@ -125,7 +125,7 @@ jobs:
         shell: bash
         working-directory: source/Files/Main-SourceCode-With-Documentation/Rider Flutter App Full SourceCode/ios
         env:
-          SIGH_APP_IDENTIFIER: com.ridego.rider
+          SIGH_APP_IDENTIFIER: com.dashtransports.rider
         run: |
           printf 'y\n' | bundle exec fastlane match nuke distribution --verbose
           bundle exec fastlane match appstore --readonly false --force --verbose

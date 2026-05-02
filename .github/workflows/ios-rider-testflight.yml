@@ -1,4 +1,4 @@
-name: Rider iOS TestFlight
+name: Dash Rider iOS TestFlight
 
 on:
   workflow_dispatch:
@@ -111,6 +111,22 @@ jobs:
         working-directory: ${{ env.APP_PATH }}/ios
         run: bundle exec fastlane ios beta --verbose
 
+      - name: Collect success artifacts
+        if: success()
+        shell: bash
+        run: |
+          mkdir -p success-artifacts
+          find ~/Library/Developer/Xcode/Archives -name "*.xcarchive" -type d -print -exec cp -R {} success-artifacts/ \; 2>/dev/null || true
+          find "${{ env.APP_PATH }}/ios" -maxdepth 1 \( -name "*.ipa" -o -name "*.pkg" -o -name "*.app" \) -print -exec cp -R {} success-artifacts/ \; 2>/dev/null || true
+
+      - name: Upload success artifacts
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dash-rider-ios-build-artifacts
+          path: success-artifacts
+          if-no-files-found: warn
+
       - name: Dump build logs on failure
         if: failure()
         shell: bash
@@ -167,6 +183,6 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: rider-ios-failure-artifacts
+          name: dash-rider-ios-failure-artifacts
           path: failure-artifacts
           if-no-files-found: warn
