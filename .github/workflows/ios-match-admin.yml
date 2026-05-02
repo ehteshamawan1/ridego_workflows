@@ -85,6 +85,12 @@ jobs:
           bundler-cache: true
           working-directory: source/Files/Main-SourceCode-With-Documentation/Driver Flutter App Full SourceCode/ios
 
+      - name: Install Rider iOS gems
+        shell: bash
+        working-directory: source/Files/Main-SourceCode-With-Documentation/Rider Flutter App Full SourceCode/ios
+        run: |
+          bundle install
+
       - name: Configure match repo auth
         if: ${{ env.MATCH_GIT_PAT != '' }}
         shell: bash
